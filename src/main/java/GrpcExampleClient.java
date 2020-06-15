@@ -22,7 +22,7 @@ public class GrpcExampleClient {
         String host = System.getProperty("host", "localhost");
         int port = Integer.parseInt(System.getProperty("port", "50000"));
         System.out.printf("dialing %s:%d%n", host, port);
-        ManagedChannel channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext(true).build();
+        ManagedChannel channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
         ExampleServiceGrpc.ExampleServiceStub service = ExampleServiceGrpc.newStub(channel);
         AtomicReference<StreamObserver<BiDirectionalExampleService.RequestCall>> requestObserverRef = new AtomicReference<>();
         CountDownLatch finishedLatch = new CountDownLatch(1);
