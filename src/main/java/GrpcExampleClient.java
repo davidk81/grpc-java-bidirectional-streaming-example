@@ -13,11 +13,14 @@ import java.text.StringCharacterIterator;
 import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class GrpcExampleClient {
 
     static long startTime = 0;
+    static long totalBytes = 0;
 
     public static void main(String [] args) throws IOException, InterruptedException {
         String host = System.getProperty("host", "localhost");
@@ -67,17 +70,18 @@ public class GrpcExampleClient {
             }
         });
         requestObserverRef.set(observer);
-        long totalBytes = 0;
         startTime = System.currentTimeMillis();
-        while (totalBytes < 1e9) {
-            byte[] b = new byte[1000000];
-            new Random().nextBytes(b);
-            ByteString data = ByteString.copyFrom(b);
-            RequestCall req = RequestCall.newBuilder().setData(data).build();
-            requestObserverRef.get().onNext(req);
-            totalBytes += b.length;
-        }
-        observer.onNext(BiDirectionalExampleService.RequestCall.getDefaultInstance());
+        ExecutorService es = Executors.newSingleThreadExecutor();
+        es.submit(() -> {
+            while (totalBytes < 1e9) {
+                byte[] b = new byte[1000000];
+                new Random().nextBytes(b);
+                ByteString data = ByteString.copyFrom(b);
+                RequestCall req = RequestCall.newBuilder().setData(data).build();
+                requestObserverRef.get().onNext(req);
+                totalBytes += b.length;
+            }
+        });
         finishedLatch.await();
         observer.onCompleted();
     }
