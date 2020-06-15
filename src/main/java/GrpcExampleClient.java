@@ -4,6 +4,7 @@ import com.example.ExampleServiceGrpc;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.protobuf.ByteString;
 import io.grpc.*;
+import io.grpc.netty.NettyChannelBuilder;
 import io.grpc.stub.StreamObserver;
 
 import java.io.IOException;
@@ -22,7 +23,7 @@ public class GrpcExampleClient {
         String host = System.getProperty("host", "localhost");
         int port = Integer.parseInt(System.getProperty("port", "50000"));
         System.out.printf("dialing %s:%d%n", host, port);
-        ManagedChannel channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext().build();
+        ManagedChannel channel = NettyChannelBuilder.forAddress(host, port).usePlaintext().maxInboundMessageSize(4000000).flowControlWindow(160000000).build();
         ExampleServiceGrpc.ExampleServiceStub service = ExampleServiceGrpc.newStub(channel);
         AtomicReference<StreamObserver<BiDirectionalExampleService.RequestCall>> requestObserverRef = new AtomicReference<>();
         CountDownLatch finishedLatch = new CountDownLatch(1);
@@ -38,11 +39,11 @@ public class GrpcExampleClient {
                 }
 
                 double elapsed = (System.currentTimeMillis() - startTime) / 1000.0;
-                System.out.printf(
-                        "stats: size: %s, rate: %sbps%n",
-                        humanReadableByteCountBin(totalBytes),
-                        humanReadableCountSI((long) (totalBytes * 8 / elapsed)));
                 if (elapsed > 5) {
+                    System.out.printf(
+                            "stats: size: %s, rate: %sbps%n",
+                            humanReadableByteCountBin(totalBytes),
+                            humanReadableCountSI((long) (totalBytes * 8 / elapsed)));
                     startTime = System.currentTimeMillis();
                     totalBytes = 0;
                 }
@@ -56,6 +57,11 @@ public class GrpcExampleClient {
 
             @Override
             public void onCompleted() {
+                double elapsed = (System.currentTimeMillis() - startTime) / 1000.0;
+                System.out.printf(
+                        "stats: size: %s, rate: %sbps%n",
+                        humanReadableByteCountBin(totalBytes),
+                        humanReadableCountSI((long) (totalBytes * 8 / elapsed)));
                 System.out.println("on completed");
                 finishedLatch.countDown();
             }
