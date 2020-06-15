@@ -2,6 +2,7 @@ group 'example.bidrectional.grpc'
 version '1.0-SNAPSHOT'
 
 apply plugin: 'java'
+apply plugin: "application"
 apply plugin: 'com.google.protobuf'
 apply plugin: "com.google.osdetector"
 
@@ -81,11 +82,15 @@ protobuf {
 task runServer(type: JavaExec) {
     classpath sourceSets.main.runtimeClasspath
     main = "GrpcExampleServer"
+    systemProperty 'host', System.properties['host']
+    systemProperty 'port', System.properties['port']
 }
 
 task runClient(type: JavaExec) {
     classpath sourceSets.main.runtimeClasspath
     main = "GrpcExampleClient"
+    systemProperty 'host', System.properties['host']
+    systemProperty 'port', System.properties['port']
 }
 
 task runHeartbeat(type: JavaExec) {

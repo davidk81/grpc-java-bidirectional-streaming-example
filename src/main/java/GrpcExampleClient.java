@@ -16,12 +16,9 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class GrpcExampleClient {
     public static void main(String [] args) throws IOException, InterruptedException {
-        String host = "localhost";
-        int port = 50000;
-        if (args.length == 3) {
-            host = args[1];
-            port = Integer.parseInt(args[2]);
-        }
+        String host = System.getProperty("host", "localhost");
+        int port = Integer.parseInt(System.getProperty("port", "50000"));
+        System.out.printf("dialing %s:%d%n", host, port);
         ManagedChannel channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext(true).build();
         ExampleServiceGrpc.ExampleServiceStub service = ExampleServiceGrpc.newStub(channel);
         AtomicReference<StreamObserver<BiDirectionalExampleService.RequestCall>> requestObserverRef = new AtomicReference<>();
