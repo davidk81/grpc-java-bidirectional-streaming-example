@@ -2,7 +2,6 @@ group 'example.bidrectional.grpc'
 version '1.0-SNAPSHOT'
 
 apply plugin: 'java'
-apply plugin: "application"
 apply plugin: 'com.google.protobuf'
 apply plugin: "com.google.osdetector"
 
