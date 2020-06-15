@@ -15,6 +15,9 @@ import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class GrpcExampleClient {
+
+    static long startTime = 0;
+
     public static void main(String [] args) throws IOException, InterruptedException {
         String host = System.getProperty("host", "localhost");
         int port = Integer.parseInt(System.getProperty("port", "50000"));
@@ -25,7 +28,6 @@ public class GrpcExampleClient {
         CountDownLatch finishedLatch = new CountDownLatch(1);
         StreamObserver<com.example.BiDirectionalExampleService.RequestCall> observer = service.connect(new StreamObserver<BiDirectionalExampleService.ResponseCall>() {
             long totalBytes = 0;
-            long startTime = 0;
             @Override
             public void onNext(BiDirectionalExampleService.ResponseCall value) {
                 totalBytes += value.getSize();
@@ -35,20 +37,11 @@ public class GrpcExampleClient {
                     onCompleted();
                 }
 
-                if (startTime == 0)
-                    startTime = System.currentTimeMillis();
-
                 double elapsed = (System.currentTimeMillis() - startTime) / 1000.0;
                 System.out.printf(
                         "stats: size: %s, rate: %sbps%n",
                         humanReadableByteCountBin(totalBytes),
                         humanReadableCountSI((long) (totalBytes * 8 / elapsed)));
-
-                byte[] b = new byte[1000000];
-                new Random().nextBytes(b);
-                ByteString data = ByteString.copyFrom(b);
-                RequestCall req = RequestCall.newBuilder().setData(data).build();
-                requestObserverRef.get().onNext(req);
             }
 
             @Override
@@ -64,6 +57,16 @@ public class GrpcExampleClient {
             }
         });
         requestObserverRef.set(observer);
+        long totalBytes = 0;
+        startTime = System.currentTimeMillis();
+        while (totalBytes < 1e9) {
+            byte[] b = new byte[1000000];
+            new Random().nextBytes(b);
+            ByteString data = ByteString.copyFrom(b);
+            RequestCall req = RequestCall.newBuilder().setData(data).build();
+            requestObserverRef.get().onNext(req);
+            totalBytes += b.length;
+        }
         observer.onNext(BiDirectionalExampleService.RequestCall.getDefaultInstance());
         finishedLatch.await();
         observer.onCompleted();
