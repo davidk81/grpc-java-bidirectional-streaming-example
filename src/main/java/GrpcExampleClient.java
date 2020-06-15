@@ -27,11 +27,14 @@ public class GrpcExampleClient {
         ManagedChannel channel = NettyChannelBuilder
                 .forAddress(host, port)
                 .usePlaintext()
-                .maxInboundMessageSize(4000000)
-                .initialFlowControlWindow(64000000)
-                .flowControlWindow(640000000)
+                .maxInboundMessageSize(8000000)
+                .initialFlowControlWindow(8000000)
+                .flowControlWindow(8000000)
                 .build();
-        ExampleServiceGrpc.ExampleServiceStub service = ExampleServiceGrpc.newStub(channel);
+        ExampleServiceGrpc.ExampleServiceStub service = ExampleServiceGrpc
+                .newStub(channel)
+                .withMaxOutboundMessageSize(8000000)
+                .withMaxInboundMessageSize(8000000);
         CountDownLatch finishedLatch = new CountDownLatch(2);
 
         StreamObserver<BiDirectionalExampleService.ResponseCall> sharedObs = new StreamObserver<BiDirectionalExampleService.ResponseCall>() {
@@ -64,8 +67,7 @@ public class GrpcExampleClient {
             }
         };
 
-        StreamObserver<com.example.BiDirectionalExampleService.RequestCall> observer1 = service.connect(sharedObs);
-        StreamObserver<com.example.BiDirectionalExampleService.RequestCall> observer2 = service.connect(sharedObs);
+        StreamObserver<com.example.BiDirectionalExampleService.RequestCall> observer = service.connect(sharedObs);
         ExecutorService es = Executors.newFixedThreadPool(1);
         startTime = System.currentTimeMillis();
         byte[] b = new byte[1000000];
@@ -74,17 +76,12 @@ public class GrpcExampleClient {
         while (totalSentBytes < 1e9) {
             es.submit(() -> {
                 RequestCall req = RequestCall.newBuilder().setData(data).build();
-                observer1.onNext(req);
-            });
-            es.submit(() -> {
-                RequestCall req = RequestCall.newBuilder().setData(data).build();
-                observer2.onNext(req);
+                observer.onNext(req);
             });
             totalSentBytes += b.length;
         }
         finishedLatch.await();
-        observer1.onCompleted();
-        observer2.onCompleted();
+        observer.onCompleted();
     }
 
     // https://stackoverflow.com/questions/3758606/how-to-convert-byte-size-into-human-readable-format-in-java
