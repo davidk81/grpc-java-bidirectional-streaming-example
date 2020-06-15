@@ -26,7 +26,13 @@ public class GrpcExampleClient {
         String host = System.getProperty("host", "localhost");
         int port = Integer.parseInt(System.getProperty("port", "50000"));
         System.out.printf("dialing %s:%d%n", host, port);
-        ManagedChannel channel = NettyChannelBuilder.forAddress(host, port).usePlaintext().maxInboundMessageSize(4000000).flowControlWindow(160000000).build();
+        ManagedChannel channel = NettyChannelBuilder
+                .forAddress(host, port)
+                .usePlaintext()
+                .maxInboundMessageSize(4000000)
+                .initialFlowControlWindow(64000000)
+                .flowControlWindow(640000000)
+                .build();
         ExampleServiceGrpc.ExampleServiceStub service = ExampleServiceGrpc.newStub(channel);
         AtomicReference<StreamObserver<BiDirectionalExampleService.RequestCall>> requestObserverRef = new AtomicReference<>();
         CountDownLatch finishedLatch = new CountDownLatch(1);
