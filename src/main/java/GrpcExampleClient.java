@@ -66,7 +66,7 @@ public class GrpcExampleClient {
 
         StreamObserver<com.example.BiDirectionalExampleService.RequestCall> observer1 = service.connect(sharedObs);
 //        StreamObserver<com.example.BiDirectionalExampleService.RequestCall> observer2 = service.connect(sharedObs);
-        ExecutorService es = Executors.newFixedThreadPool(2);
+        ExecutorService es = Executors.newFixedThreadPool(1);
         startTime = System.currentTimeMillis();
         StreamObserver<com.example.BiDirectionalExampleService.RequestCall> obs = observer1;
         byte[] b = new byte[1000000];
