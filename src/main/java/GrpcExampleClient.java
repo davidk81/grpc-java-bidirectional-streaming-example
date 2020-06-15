@@ -70,10 +70,10 @@ public class GrpcExampleClient {
         es.submit(() -> {
             startTime = System.currentTimeMillis();
             StreamObserver<com.example.BiDirectionalExampleService.RequestCall> obs = observer1;
+            byte[] b = new byte[1000000];
+            new Random().nextBytes(b);
+            ByteString data = ByteString.copyFrom(b);
             while (totalSentBytes < 1e9) {
-                byte[] b = new byte[1000000];
-                new Random().nextBytes(b);
-                ByteString data = ByteString.copyFrom(b);
                 RequestCall req = RequestCall.newBuilder().setData(data).build();
                 obs.onNext(req);
                 obs = (obs == observer1 ? observer2 : observer1);
