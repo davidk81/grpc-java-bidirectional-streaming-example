@@ -1,30 +1,57 @@
 import com.example.BiDirectionalExampleService;
+import com.example.BiDirectionalExampleService.RequestCall;
 import com.example.ExampleServiceGrpc;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.protobuf.ByteString;
 import io.grpc.*;
 import io.grpc.stub.StreamObserver;
 
 import java.io.IOException;
+import java.text.CharacterIterator;
+import java.text.StringCharacterIterator;
+import java.util.Random;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Executor;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class GrpcExampleClient {
     public static void main(String [] args) throws IOException, InterruptedException {
-        ManagedChannel channel = ManagedChannelBuilder.forAddress("localhost", 50000).usePlaintext(true).build();
+        String host = "localhost";
+        int port = 50000;
+        if (args.length == 3) {
+            host = args[1];
+            port = Integer.parseInt(args[2]);
+        }
+        ManagedChannel channel = ManagedChannelBuilder.forAddress(host, port).usePlaintext(true).build();
         ExampleServiceGrpc.ExampleServiceStub service = ExampleServiceGrpc.newStub(channel);
         AtomicReference<StreamObserver<BiDirectionalExampleService.RequestCall>> requestObserverRef = new AtomicReference<>();
         CountDownLatch finishedLatch = new CountDownLatch(1);
         StreamObserver<com.example.BiDirectionalExampleService.RequestCall> observer = service.connect(new StreamObserver<BiDirectionalExampleService.ResponseCall>() {
+            long totalBytes = 0;
+            long startTime = 0;
             @Override
             public void onNext(BiDirectionalExampleService.ResponseCall value) {
-                System.out.println("onNext from client");
-                try {
-                    Thread.sleep(1000L);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
+                totalBytes += value.getSize();
+
+                if (totalBytes >= 1e9) {
+                    requestObserverRef.get().onCompleted();
+                    onCompleted();
                 }
-                requestObserverRef.get().onNext(BiDirectionalExampleService.RequestCall.getDefaultInstance());
+
+                if (startTime == 0)
+                    startTime = System.currentTimeMillis();
+
+                double elapsed = (System.currentTimeMillis() - startTime) / 1000.0;
+                System.out.printf(
+                        "stats: size: %s, rate: %sbps%n",
+                        humanReadableByteCountBin(totalBytes),
+                        humanReadableCountSI((long) (totalBytes * 8 / elapsed)));
+
+                byte[] b = new byte[1000000];
+                new Random().nextBytes(b);
+                ByteString data = ByteString.copyFrom(b);
+                RequestCall req = RequestCall.newBuilder().setData(data).build();
+                requestObserverRef.get().onNext(req);
             }
 
             @Override
@@ -43,5 +70,34 @@ public class GrpcExampleClient {
         observer.onNext(BiDirectionalExampleService.RequestCall.getDefaultInstance());
         finishedLatch.await();
         observer.onCompleted();
+    }
+
+    // https://stackoverflow.com/questions/3758606/how-to-convert-byte-size-into-human-readable-format-in-java
+    private static String humanReadableCountSI(long units) {
+        if (-1000 < units && units < 1000) {
+            return units + " ";
+        }
+        CharacterIterator ci = new StringCharacterIterator("kMGTPE");
+        while (units <= -999_950 || units >= 999_950) {
+            units /= 1000;
+            ci.next();
+        }
+        return String.format("%.1f %c", units / 1000.0, ci.current());
+    }
+
+    // https://stackoverflow.com/questions/3758606/how-to-convert-byte-size-into-human-readable-format-in-java
+    private static String humanReadableByteCountBin(long bytes) {
+        long absB = bytes == Long.MIN_VALUE ? Long.MAX_VALUE : Math.abs(bytes);
+        if (absB < 1024) {
+            return bytes + " B";
+        }
+        long value = absB;
+        CharacterIterator ci = new StringCharacterIterator("KMGTPE");
+        for (int i = 40; i >= 0 && absB > 0xfffccccccccccccL >> i; i -= 10) {
+            value >>= 10;
+            ci.next();
+        }
+        value *= Long.signum(bytes);
+        return String.format("%.1f %ciB", value / 1024.0, ci.current());
     }
 }

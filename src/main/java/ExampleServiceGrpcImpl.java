@@ -1,4 +1,5 @@
 import com.example.BiDirectionalExampleService;
+import com.example.BiDirectionalExampleService.ResponseCall;
 import com.example.ExampleServiceGrpc;
 import io.grpc.stub.StreamObserver;
 
@@ -10,12 +11,8 @@ public class ExampleServiceGrpcImpl extends ExampleServiceGrpc.ExampleServiceImp
             @Override
             public void onNext(BiDirectionalExampleService.RequestCall value) {
                 System.out.println("onNext from server");
-                try {
-                    Thread.sleep(1000L);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
-                responseObserver.onNext(BiDirectionalExampleService.ResponseCall.getDefaultInstance());
+                ResponseCall res = ResponseCall.newBuilder().setSize(value.getData().size()).build();
+                responseObserver.onNext(res);
             }
 
             @Override

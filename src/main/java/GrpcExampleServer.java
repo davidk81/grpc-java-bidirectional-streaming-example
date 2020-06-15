@@ -11,8 +11,13 @@ public class GrpcExampleServer {
     private static Executor executor;
 
     public static void main(String [] args) throws IOException, InterruptedException {
-
-        ServerBuilder builder = NettyServerBuilder.forAddress(new InetSocketAddress("localhost", 50000));
+        String host = "localhost";
+        int port = 50000;
+        if (args.length == 3) {
+            host = args[1];
+            port = Integer.parseInt(args[2]);
+        }
+        ServerBuilder builder = NettyServerBuilder.forAddress(new InetSocketAddress(host, port));
         executor = MoreExecutors.directExecutor();
         builder.executor(executor);
         Server server = builder.addService(new ExampleServiceGrpcImpl()).build();
