@@ -65,24 +65,26 @@ public class GrpcExampleClient {
         };
 
         StreamObserver<com.example.BiDirectionalExampleService.RequestCall> observer1 = service.connect(sharedObs);
-//        StreamObserver<com.example.BiDirectionalExampleService.RequestCall> observer2 = service.connect(sharedObs);
+        StreamObserver<com.example.BiDirectionalExampleService.RequestCall> observer2 = service.connect(sharedObs);
         ExecutorService es = Executors.newFixedThreadPool(1);
         startTime = System.currentTimeMillis();
-        StreamObserver<com.example.BiDirectionalExampleService.RequestCall> obs = observer1;
         byte[] b = new byte[1000000];
         new Random().nextBytes(b);
         ByteString data = ByteString.copyFrom(b);
         while (totalSentBytes < 1e9) {
             es.submit(() -> {
                 RequestCall req = RequestCall.newBuilder().setData(data).build();
-                obs.onNext(req);
-//                obs = (obs == observer1 ? observer2 : observer1);
+                observer1.onNext(req);
+            });
+            es.submit(() -> {
+                RequestCall req = RequestCall.newBuilder().setData(data).build();
+                observer2.onNext(req);
             });
             totalSentBytes += b.length;
         }
         finishedLatch.await();
         observer1.onCompleted();
-//        observer2.onCompleted();
+        observer2.onCompleted();
     }
 
     // https://stackoverflow.com/questions/3758606/how-to-convert-byte-size-into-human-readable-format-in-java
