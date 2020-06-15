@@ -65,8 +65,8 @@ public class GrpcExampleClient {
         };
 
         StreamObserver<com.example.BiDirectionalExampleService.RequestCall> observer1 = service.connect(sharedObs);
-        StreamObserver<com.example.BiDirectionalExampleService.RequestCall> observer2 = service.connect(sharedObs);
-        ExecutorService es = Executors.newSingleThreadExecutor();
+//        StreamObserver<com.example.BiDirectionalExampleService.RequestCall> observer2 = service.connect(sharedObs);
+        ExecutorService es = Executors.newFixedThreadPool(2);
         es.submit(() -> {
             startTime = System.currentTimeMillis();
             StreamObserver<com.example.BiDirectionalExampleService.RequestCall> obs = observer1;
@@ -76,7 +76,7 @@ public class GrpcExampleClient {
             while (totalSentBytes < 1e9) {
                 RequestCall req = RequestCall.newBuilder().setData(data).build();
                 obs.onNext(req);
-                obs = (obs == observer1 ? observer2 : observer1);
+//                obs = (obs == observer1 ? observer2 : observer1);
                 totalSentBytes += b.length;
             }
         });
