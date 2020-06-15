@@ -42,6 +42,10 @@ public class GrpcExampleClient {
                         "stats: size: %s, rate: %sbps%n",
                         humanReadableByteCountBin(totalBytes),
                         humanReadableCountSI((long) (totalBytes * 8 / elapsed)));
+                if (elapsed > 5) {
+                    startTime = System.currentTimeMillis();
+                    totalBytes = 0;
+                }
             }
 
             @Override
