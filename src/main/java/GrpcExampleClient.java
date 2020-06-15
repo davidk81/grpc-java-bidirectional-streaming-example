@@ -82,7 +82,7 @@ public class GrpcExampleClient {
         });
         finishedLatch.await();
         observer1.onCompleted();
-        observer2.onCompleted();
+//        observer2.onCompleted();
     }
 
     // https://stackoverflow.com/questions/3758606/how-to-convert-byte-size-into-human-readable-format-in-java
