@@ -27,9 +27,16 @@ public class GrpcExampleClient {
         ManagedChannel channel = NettyChannelBuilder
                 .forAddress(host, port)
                 .usePlaintext()
+                .maxInboundMessageSize(8000000)
+                .initialFlowControlWindow(8000000)
+                .flowControlWindow(8000000)
+                .retryBufferSize(8000000)
+                .perRpcBufferLimit(8000000)
                 .build();
         ExampleServiceGrpc.ExampleServiceStub service = ExampleServiceGrpc
-                .newStub(channel);
+                .newStub(channel)
+                .withMaxOutboundMessageSize(8000000)
+                .withMaxInboundMessageSize(8000000);
         CountDownLatch finishedLatch = new CountDownLatch(2);
 
         StreamObserver<BiDirectionalExampleService.ResponseCall> sharedObs = new StreamObserver<BiDirectionalExampleService.ResponseCall>() {
