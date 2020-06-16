@@ -9,20 +9,21 @@ import java.util.concurrent.Executor;
 
 public class GrpcExampleServer {
     private static Executor executor;
+    public static final int BUFFER_SIZE = 32000000;
 
     public static void main(String [] args) throws IOException, InterruptedException {
         String host = System.getProperty("host", "localhost");
         int port = Integer.parseInt(System.getProperty("port", "50000"));
         System.out.printf("listening on %s:%d%n", host, port);
         ServerBuilder builder = NettyServerBuilder.forAddress(new InetSocketAddress(host, port))
-                .maxInboundMessageSize(8000000)
-                .initialFlowControlWindow(8000000)
-                .flowControlWindow(8000000);
+                .maxInboundMessageSize(BUFFER_SIZE)
+                .initialFlowControlWindow(BUFFER_SIZE)
+                .flowControlWindow(BUFFER_SIZE);
         executor = MoreExecutors.directExecutor();
         builder.executor(executor);
         Server server = builder
                 .addService(new ExampleServiceGrpcImpl())
-                .maxInboundMessageSize(8000000)
+                .maxInboundMessageSize(BUFFER_SIZE)
                 .build();
 
         server.start();
