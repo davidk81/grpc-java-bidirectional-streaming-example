@@ -9,7 +9,7 @@ import java.util.concurrent.Executor;
 
 public class GrpcExampleServer {
     private static Executor executor;
-    public static final int BUFFER_SIZE = 32000000;
+    public static final int BUFFER_SIZE = 64000000;
 
     public static void main(String [] args) throws IOException, InterruptedException {
         String host = System.getProperty("host", "localhost");
