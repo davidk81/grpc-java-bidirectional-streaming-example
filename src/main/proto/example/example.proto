@@ -6,14 +6,24 @@ option java_outer_classname = "BiDirectionalExampleService";
 
 package com.example;
 
+enum Sentiment {
+    HAPPY = 0;
+    SLEEPY = 1;
+    ANGRY = 2;
+}
+
+message FooRequest {
+    string name = 1;
+    int32 age = 2;
+    repeated string hobbies = 3;
+    map<string, string> bagOfTricks = 4;
+    Sentiment sentiment = 5;
+}
+
+message FooResponse {
+    int32 result = 1;
+}
+
 service ExampleService {
-    rpc Connect (stream RequestCall) returns (stream ResponseCall);
-}
-
-message RequestCall {
-    bytes data = 1;
-}
-
-message ResponseCall {
-    int32 size = 1;
+    rpc foo(FooRequest) returns (FooResponse);
 }
