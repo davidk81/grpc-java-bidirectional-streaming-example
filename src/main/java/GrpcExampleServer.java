@@ -9,11 +9,10 @@ import java.util.concurrent.Executor;
 
 public class GrpcExampleServer {
     private static Executor executor;
-    public static final int BUFFER_SIZE = 64000000;
 
     public static void main(String [] args) throws IOException, InterruptedException {
         String host = System.getProperty("host", "localhost");
-        int port = Integer.parseInt(System.getProperty("port", "50000"));
+        int port = 50000;
         System.out.printf("listening on %s:%d%n", host, port);
         ServerBuilder builder = NettyServerBuilder.forAddress(new InetSocketAddress(host, port));
         executor = MoreExecutors.directExecutor();

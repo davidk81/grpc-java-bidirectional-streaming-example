@@ -9,8 +9,8 @@ import java.io.IOException;
 public class GrpcExampleClient {
 
     public static void main(String [] args) throws IOException, InterruptedException {
-        String host = System.getProperty("host", "localhost");
-        int port = Integer.parseInt(System.getProperty("port", "50000"));
+        String host = "localhost";
+        int port = 50000;
         System.out.printf("dialing %s:%d%n", host, port);
         ManagedChannel channel = NettyChannelBuilder
                 .forAddress(host, port)
